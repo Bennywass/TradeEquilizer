@@ -2,9 +2,9 @@
 
 ## Overview
 
-TradeEqualizer is a mobile-first Progressive Web App (PWA) built with Next.js that facilitates MTG card trading through intelligent matching algorithms. The system uses a modern tech stack including Next.js App Router, TypeScript, Supabase for authentication and database, Stripe for payments, and integrates with Scryfall and TCGplayer APIs for card data and pricing.
+TradeEqualizer is a mobile-first Progressive Web App (PWA) built with Next.js that facilitates MTG card trading through intelligent matching algorithms. The P0 MVP is scoped to MTG-only with USD pricing from TCGplayer Market to ensure rapid pilot deployment. The system uses a modern tech stack including Next.js App Router, TypeScript, Supabase for authentication and database, Stripe for payments, and integrates with Scryfall and TCGplayer APIs for card data and pricing.
 
-The architecture follows a mobile-first, offline-capable approach with PWA features including service workers, app-like installation, push notifications, and offline functionality. The serverless backend handles business logic through API routes, provides real-time capabilities for trading sessions, and delivers a native app-like experience optimized primarily for mobile devices with desktop as a secondary consideration.
+The architecture follows a mobile-first, offline-capable approach with PWA features including service workers, app-like installation, and basic offline functionality for P0. Enhanced offline features, push notifications, and multi-TCG support are planned for P1/P2 phases. The serverless backend handles business logic through API routes, provides real-time capabilities for trading sessions, and delivers a native app-like experience optimized primarily for mobile devices with desktop as a secondary consideration.
 
 ## Architecture
 
@@ -95,10 +95,10 @@ interface User {
   subscriptionExpiresAt?: Date;
 }
 
-// Card Catalog
+// Card Catalog (P0: MTG-only)
 interface Item {
   id: string;
-  game: 'mtg' | 'pokemon' | 'yugioh' | 'lorcana';
+  game: 'mtg'; // P0 scope: MTG only, expand to 'pokemon' | 'yugioh' | 'lorcana' in P1/P2
   name: string;
   set: string;
   collectorNumber: string;
@@ -136,12 +136,12 @@ interface Want {
   createdAt: Date;
 }
 
-// Pricing Data
+// Pricing Data (P0: TCGplayer Market, USD only)
 interface Price {
   id: string;
   itemId: string;
-  source: 'tcgplayer_market' | 'tcgplayer_low' | 'store_buylist' | 'manual';
-  currency: 'USD';
+  source: 'tcgplayer_market'; // P0 scope: Market only, expand to 'tcgplayer_low' | 'store_buylist' | 'manual' in P1/P2
+  currency: 'USD'; // P0 scope: USD only, expand to 'EUR' in P2
   market: number;
   low: number;
   high: number;
@@ -161,19 +161,19 @@ interface Price {
   asOf: Date;
 }
 
-// Trading Sessions
+// Trading Sessions (P0: Enhanced security with single-use tokens)
 interface TradeSession {
   id: string;
-  qrCode: string; // Single-use, TTL ≤ 2 minutes, scoped to user+device
+  qrCode: string; // Single-use token, TTL ≤ 2 minutes, rate-limited 10/min/IP
   userAId: string;
   userBId?: string;
-  game: 'mtg' | 'pokemon' | 'yugioh' | 'lorcana';
-  priceSource: 'tcgplayer_market' | 'tcgplayer_low' | 'store_buylist' | 'lgs_buylist';
-  fairnessThreshold: number; // Configurable ±% threshold
-  currency: 'USD' | 'EUR';
+  game: 'mtg'; // P0 scope: MTG only
+  priceSource: 'tcgplayer_market'; // P0 scope: Market only
+  fairnessThreshold: number; // Default ±5%, configurable ±2-10% in P1
+  currency: 'USD'; // P0 scope: USD only
   status: 'waiting' | 'connected' | 'proposing' | 'completed' | 'cancelled';
   eventId?: string;
-  expiresAt: Date;
+  expiresAt: Date; // TTL ≤ 2 minutes for QR codes
   createdAt: Date;
 }
 
@@ -204,15 +204,15 @@ interface TradeItem {
   priceVersion: string; // Price snapshot version used
 }
 
-// Events (LGS)
+// Events (LGS) - P0: MTG-only with enhanced privacy
 interface Event {
   id: string;
   name: string;
   code: string;
   createdBy: string;
-  game: 'mtg' | 'pokemon' | 'yugioh' | 'lorcana';
-  defaultPriceSource: 'tcgplayer_market' | 'tcgplayer_low' | 'store_buylist';
-  fairnessThreshold: number; // Custom ±% for this event
+  game: 'mtg'; // P0 scope: MTG only
+  defaultPriceSource: 'tcgplayer_market'; // P0 scope: Market only
+  fairnessThreshold: number; // Default ±5%, configurable in P1
   startDate: Date;
   endDate: Date;
   isActive: boolean;
@@ -222,9 +222,9 @@ interface Event {
 interface EventMember {
   eventId: string;
   userId: string;
-  visibility: 'private' | 'event';
-  consentToContact: boolean;
-  visibilityExpiresAt: Date; // Time-boxed visibility
+  visibility: 'private' | 'event'; // Default private, explicit opt-in required
+  consentToContact: boolean; // P1: Explicit consent for contact sharing
+  visibilityExpiresAt: Date; // Auto-expire +2h after event end
   joinedAt: Date;
 }
 ```
@@ -335,10 +335,10 @@ CREATE TABLE users (
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- Items (Card Catalog)
+-- Items (Card Catalog) - P0: MTG-only
 CREATE TABLE items (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  game TEXT NOT NULL DEFAULT 'mtg' CHECK (game IN ('mtg', 'pokemon', 'yugioh', 'lorcana')),
+  game TEXT NOT NULL DEFAULT 'mtg' CHECK (game = 'mtg'), -- P0 scope: MTG only
   name TEXT NOT NULL,
   set_code TEXT NOT NULL,
   collector_number TEXT NOT NULL,
@@ -393,18 +393,18 @@ CREATE TABLE wants (
 CREATE INDEX wants_user_idx ON wants(user_id);
 CREATE INDEX wants_priority_idx ON wants(user_id, priority);
 
--- Pricing Data
+-- Pricing Data - P0: TCGplayer Market, USD only
 CREATE TABLE prices (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   item_id UUID REFERENCES items(id) ON DELETE CASCADE,
-  source TEXT NOT NULL CHECK (source IN ('tcgplayer_market', 'tcgplayer_low', 'store_buylist', 'manual')),
-  currency TEXT DEFAULT 'USD',
+  source TEXT NOT NULL DEFAULT 'tcgplayer_market' CHECK (source = 'tcgplayer_market'), -- P0 scope: Market only
+  currency TEXT DEFAULT 'USD' CHECK (currency = 'USD'), -- P0 scope: USD only
   market DECIMAL(10,2),
   low DECIMAL(10,2),
   high DECIMAL(10,2),
-  condition_multipliers JSONB DEFAULT '{"NM": 1.0, "LP": 0.85, "MP": 0.7, "HP": 0.5}',
+  condition_multipliers JSONB DEFAULT '{"NM": 1.0, "LP": 0.9, "MP": 0.75, "HP": 0.5}', -- Updated defaults from v1.1
   finish_multipliers JSONB DEFAULT '{"normal": 1.0, "foil": 1.5, "etched": 1.3, "showcase": 1.2}',
-  version TEXT NOT NULL, -- Price snapshot version
+  version TEXT NOT NULL, -- Price snapshot version for audit trail
   as_of TIMESTAMPTZ NOT NULL,
   created_at TIMESTAMPTZ DEFAULT NOW(),
   UNIQUE(item_id, source, as_of)
@@ -413,15 +413,19 @@ CREATE TABLE prices (
 CREATE INDEX prices_item_idx ON prices(item_id);
 CREATE INDEX prices_date_idx ON prices(as_of DESC);
 
--- Trade Sessions
+-- Trade Sessions - P0: Enhanced security with single-use tokens
 CREATE TABLE trade_sessions (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  qr_code TEXT UNIQUE NOT NULL,
+  qr_code TEXT UNIQUE NOT NULL, -- Single-use token, TTL ≤ 2 minutes
   user_a_id UUID REFERENCES users(id) ON DELETE CASCADE,
   user_b_id UUID REFERENCES users(id) ON DELETE CASCADE,
+  game TEXT NOT NULL DEFAULT 'mtg' CHECK (game = 'mtg'), -- P0 scope: MTG only
+  price_source TEXT NOT NULL DEFAULT 'tcgplayer_market' CHECK (price_source = 'tcgplayer_market'), -- P0 scope
+  fairness_threshold DECIMAL(5,2) DEFAULT 5.0, -- Default ±5%
+  currency TEXT DEFAULT 'USD' CHECK (currency = 'USD'), -- P0 scope: USD only
   status TEXT DEFAULT 'waiting' CHECK (status IN ('waiting', 'connected', 'proposing', 'completed', 'cancelled')),
   event_id UUID REFERENCES events(id) ON DELETE SET NULL,
-  expires_at TIMESTAMPTZ NOT NULL,
+  expires_at TIMESTAMPTZ NOT NULL, -- TTL ≤ 2 minutes for QR codes
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
@@ -491,6 +495,19 @@ CREATE TABLE item_reservations (
 
 CREATE INDEX item_reservations_expires_idx ON item_reservations(expires_at);
 CREATE INDEX item_reservations_inventory_idx ON item_reservations(inventory_id);
+
+-- QR Code Rate Limiting - P0: 10/min/IP security requirement
+CREATE TABLE qr_rate_limits (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  ip_address INET NOT NULL,
+  created_count INTEGER DEFAULT 1,
+  window_start TIMESTAMPTZ DEFAULT NOW(),
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  UNIQUE(ip_address, window_start)
+);
+
+CREATE INDEX qr_rate_limits_ip_window_idx ON qr_rate_limits(ip_address, window_start);
+CREATE INDEX qr_rate_limits_window_idx ON qr_rate_limits(window_start) WHERE window_start > NOW() - INTERVAL '1 minute';
 
 -- Completed Trades (immutable audit trail)
 CREATE TABLE completed_trades (
@@ -644,19 +661,18 @@ enum ErrorCodes {
 
 ## Testing Strategy
 
-### Unit Testing
-- Model validation and business logic
-- Utility functions and helpers
-- Match algorithm components
-- Price calculation functions
+### Manual Testing Focus
+- Prioritize manual testing over automated unit tests for rapid development
+- Focus on end-to-end functionality validation through browser testing
+- Emphasize early feedback loops through local development testing
 
-### Integration Testing
-- API endpoint functionality
-- Database operations
-- External API integrations
-- Authentication flows
+### Integration Testing (End of Development Cycle)
+- API endpoint functionality validation
+- Database operations verification
+- External API integrations testing
+- Authentication flows validation
 
-### End-to-End Testing
+### End-to-End Manual Testing
 - Complete trade flow (QR → match → receipt) on mobile devices
 - CSV import functionality on mobile and desktop
 - Event creation and joining via mobile interface
@@ -666,23 +682,23 @@ enum ErrorCodes {
 - Camera-based QR code scanning
 - Touch gesture interactions and mobile UX flows
 
-### Performance Testing
+### Performance Validation
 - Match algorithm performance with large datasets
-- Database query optimization
-- API response times under load
-- WebSocket connection limits
+- Database query optimization verification
+- API response times under load testing
+- WebSocket connection limits validation
 
-### Security Testing
-- Authentication and authorization
-- Input validation and sanitization
-- Rate limiting effectiveness
-- PII protection in logs
+### Security Validation
+- Authentication and authorization testing
+- Input validation and sanitization verification
+- Rate limiting effectiveness testing
+- PII protection in logs validation
 
 ### Test Data Management
 - Seeded test database with realistic card data
-- Mock external API responses
-- Isolated test environments
-- Automated test data cleanup
+- Mock external API responses for development
+- Local development environment setup
+- Manual test scenario documentation
 
 ## PWA Implementation Details
 
@@ -790,11 +806,20 @@ const OFFLINE_URLS = [
 - **Price Data Protection**: Price tables never exposed to client-side code
 - **Immutable Trade Records**: Completed trades stored with full snapshot for audit
 
-### Pilot-Ready Test Scenarios
-1. **Multi-Price Source**: Verify different sources (market vs buylist) yield different fairness calculations
-2. **Printing Constraints**: Test different printing/language/condition constraints block/allow matches correctly
-3. **Offline Events**: Generate suggestions from cached prices, queue receipts for later delivery
-4. **QR Expiry**: Verify expired QR codes block late joins, re-scan generates new session
-5. **Tier Limits**: Free-tier banners trigger at thresholds and recover after reset periods
+### P0 MVP Scope & Constraints
+- **MTG-Only**: Multi-TCG support deferred to P1/P2 for rapid pilot deployment
+- **USD-Only**: Multi-currency support deferred to P2
+- **TCGplayer Market**: Single price source for P0, buylist/low pricing in P1/P2
+- **Enhanced Security**: Single-use QR tokens with 2-minute TTL and 10/min/IP rate limiting
+- **Immutable Snapshots**: P0 requirement for trade reproducibility and audit compliance
+- **Basic Offline**: Price caching for P0, full offline sessions in P1
+
+### Pilot-Ready Test Scenarios (P0 Focus)
+1. **QR Security**: Verify single-use tokens expire in ≤2min, rate limiting blocks >10/min/IP
+2. **Printing Constraints**: Test MTG printing/language/condition constraints in matching
+3. **Offline Price Cache**: Generate suggestions from cached TCGplayer Market prices
+4. **Immutable Snapshots**: Verify completed trades store full audit trail with price versions
+5. **Concurrency Control**: Test 5-minute item reservations prevent double-spend conflicts
+6. **Free Tier Limits**: Verify 100 inventory, 50 wants, 10 suggestions/day, 1 event/month limits
 
 The testing strategy ensures reliability across all user flows while maintaining performance standards, security requirements, and optimal mobile user experience with comprehensive SLO monitoring.

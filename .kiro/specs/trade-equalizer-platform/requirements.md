@@ -1,259 +1,275 @@
 # Requirements Document
 
+## Scope Tags
+- **P0 (MVP pilot)** — must ship for first LGS trials
+- **P1 (Beta)** — add after pilot learnings (2–6 weeks)
+- **P2 (Later/Conditional)** — only if demanded by paying users
+
+## Glossary & Global Rules
+- **P95 latency**: 95th percentile for the given operation
+- **Fairness threshold**: default ±5%; compute value deltas after rounding to cents
+- **Must/Want/Nice**: want-list priorities 3/2/1 (3 = Must)
+- **Price Source (P0)**: TCGplayer Market, USD only
+- **MTG-only (P0)**: Multi-TCG is out of scope for MVP
+- **QR security**: single-use token, TTL ≤ 2 minutes, rate-limit 10/min/IP
+- **Concurrency**: items in an active proposal are reserved up to 5 minutes
+- **RLS**: Row-level security on Inventory, Want, Trade, EventMember; no PII in analytics
+
 ## Introduction
 
 TradeEqualizer is a lightweight micro-SaaS platform designed to facilitate fair and efficient Magic: The Gathering (MTG) card trading between players. The platform uses a match-first engine that analyzes user inventories and want lists to suggest optimal trades based on real market prices. The system supports both individual trading sessions and event-based trading for local game stores (LGS), with features including QR code connectivity, automated trade balancing, and receipt generation.
 
 ## Requirements
 
-### Requirement 1
+### Requirement 1 — Inventory & Want List (Trade-first collection) [P0]
 
-**User Story:** As an MTG player, I want to manage my card inventory and want list digitally, so that I can efficiently track what I have available for trade and what I'm looking for.
-
-#### Acceptance Criteria
-
-1. WHEN a user adds a card to their inventory THEN the system SHALL store the card details including quantity, condition (NM/LP/MP/HP), foil status, and tradable flag
-2. WHEN a user searches for cards THEN the system SHALL return results from the local card catalog in under 150ms
-3. WHEN a user imports a CSV file THEN the system SHALL process 100+ rows and map them to inventory items
-4. WHEN a user adds items to their want list THEN the system SHALL store quantity, minimum condition, foil preference, and priority level (1-3)
-5. IF a user marks an inventory item as non-tradable THEN the system SHALL exclude it from trade matching algorithms
-
-### Requirement 2
-
-**User Story:** As an MTG player, I want the system to suggest fair trades based on current market prices, so that I can make equitable exchanges with other players.
+**User Story:** As a player, I manage tradeables and wants quickly.
 
 #### Acceptance Criteria
 
-1. WHEN two users initiate a trade session THEN the system SHALL analyze both inventories and want lists to generate trade suggestions with P95 latency under 3 seconds and show skeleton UI if slower
-2. WHEN generating trade suggestions THEN the system SHALL prioritize coverage of high-priority want list items
-3. WHEN calculating trade fairness THEN the system SHALL ensure value difference is within configurable thresholds (±5% default, ±2-10% for LGS sessions) with values rounded to cents before percentage comparison
-4. IF a trade is imbalanced THEN the system SHALL suggest "make-it-even" filler cards to balance the trade
-5. WHEN displaying trade suggestions THEN the system SHALL show 3-5 candidate trades with coverage badges
-6. WHEN a trade suggestion satisfies at least one "Must" priority item THEN the system SHALL highlight this in the interface
+1. WHEN storing inventory THEN the system SHALL capture qty, condition (NM/LP/MP/HP), foil, tradable
+2. WHEN searching cards from local catalog THEN the system SHALL return results with P95 <150ms
+3. WHEN importing CSV THEN the system SHALL process 100+ rows and map to inventory
+4. WHEN storing want list THEN the system SHALL store qty, minCondition, foilOk, priority (1–3)
+5. WHEN items are non-tradable THEN the system SHALL exclude from matching
 
-### Requirement 3
+### Requirement 2 — Match-First Suggestions & Fairness [P0]
 
-**User Story:** As an MTG player, I want to connect with other traders via QR codes, so that I can quickly initiate trading sessions without complex setup.
-
-#### Acceptance Criteria
-
-1. WHEN a user generates a QR code THEN the system SHALL create a short-lived connection code
-2. WHEN another user scans the QR code THEN the system SHALL establish a 1:1 trade session between the users
-3. WHEN a QR code expires THEN the system SHALL prevent new connections using that code
-4. WHEN users are connected via QR THEN the system SHALL enable real-time trade proposal sharing
-
-### Requirement 4
-
-**User Story:** As an MTG player, I want to receive a receipt for completed trades, so that I have a record of the exchange for my collection management.
+**User Story:** As a player, I get fair, want-first suggestions fast.
 
 #### Acceptance Criteria
 
-1. WHEN a trade is accepted THEN the system SHALL generate a PDF receipt with P95 latency under 2 seconds to account for cold starts
-2. WHEN generating a receipt THEN the system SHALL include all traded items, quantities, conditions, and calculated values for both parties
-3. WHEN a trade is completed THEN the system SHALL automatically update both users' inventories to reflect the exchange
-4. IF requested THEN the system SHALL email the receipt to both parties
-5. WHEN a receipt is generated THEN the system SHALL ensure all values and quantities are accurate
+1. WHEN generating suggestions THEN the system SHALL achieve P95 <3s and show skeleton UI if slower
+2. WHEN prioritizing THEN the system SHALL prioritize coverage of higher-priority wants
+3. WHEN enforcing fairness THEN the system SHALL enforce within ±5% (rounded to cents first). (Configurable per session in P1: ±2–10%.)
+4. WHEN imbalanced THEN the system SHALL offer "make-it-even" fillers
+5. WHEN displaying THEN the system SHALL show 3–5 candidate bundles with coverage badges
+6. WHEN any Must is satisfied THEN the system SHALL highlight this in UI
 
-### Requirement 5
+### Requirement 3 — QR Connect (1:1 Session) [P0]
 
-**User Story:** As a local game store owner, I want to host trading events where players can find matches within the event scope, so that I can facilitate organized trading sessions.
-
-#### Acceptance Criteria
-
-1. WHEN an LGS creates an event THEN the system SHALL generate a unique room code for the event
-2. WHEN players join an event THEN the system SHALL scope their trade matching to other event participants
-3. WHEN displaying nearby matches THEN the system SHALL show only matches within the current event scope
-4. WHEN 50 users are in an event THEN the system SHALL return nearby matches in under 1 second
-5. IF a kiosk mode is enabled THEN the system SHALL display anonymous match prompts on a rotating basis
-
-### Requirement 6
-
-**User Story:** As a platform user, I want access to current card pricing data, so that trades are based on accurate market values.
+**User Story:** As a player, I start a trade via QR with no setup.
 
 #### Acceptance Criteria
 
-1. WHEN the system updates prices THEN it SHALL pull data from TCGplayer API within rate limits
-2. WHEN storing price data THEN the system SHALL capture market, low, high values and timestamp
-3. WHEN price API is unavailable THEN the system SHALL fall back to cached price snapshots
-4. WHEN daily price updates run THEN the system SHALL complete within the allocated API budget with P95 duration under 10 minutes
-5. IF price data is stale THEN the system SHALL indicate the age of pricing information to users and log price snapshot version used on each trade and receipt
+1. WHEN creating QR THEN the system SHALL create single-use, short-lived code (TTL ≤ 2 min)
+2. WHEN scanning THEN the system SHALL establish a 1:1 session
+3. WHEN expired THEN the system SHALL prevent expired codes from starting sessions
+4. WHEN connected THEN the system SHALL enable real-time proposal sharing
+5. WHEN creating sessions THEN the system SHALL rate-limit (10/min/IP)
 
-### Requirement 7
+### Requirement 4 — Receipts & Inventory Updates [P0]
 
-**User Story:** As a platform operator, I want to offer tiered subscription plans, so that I can monetize the platform while providing value to different user types.
-
-#### Acceptance Criteria
-
-1. WHEN a user selects a subscription plan THEN the system SHALL process payment via Stripe
-2. WHEN subscription entitlements are checked THEN the system SHALL enforce feature access based on plan level
-3. WHEN a free user exceeds limits THEN the system SHALL prompt for upgrade to Pro ($5/mo) or LGS ($15-19/mo) plans
-4. WHEN payment processing fails THEN the system SHALL gracefully handle errors and notify the user
-5. IF a subscription expires THEN the system SHALL downgrade access to free tier features
-
-### Requirement 8
-
-**User Story:** As a platform user, I want my personal information to be secure and private, so that I can use the service with confidence.
+**User Story:** When we agree, I get a clear receipt and my lists update.
 
 #### Acceptance Criteria
 
-1. WHEN user data is logged THEN the system SHALL NOT include personally identifiable information (PII) and SHALL implement row-level security on Inventory, Want, Trade, and EventMember tables with no PII in analytics
-2. WHEN API requests are made THEN the system SHALL enforce rate limits to prevent abuse
-3. WHEN users authenticate THEN the system SHALL use secure email link authentication via Supabase
-4. WHEN displaying legal information THEN the system SHALL show Terms of Service and Privacy Policy
-5. WHEN showing disclaimers THEN the system SHALL clearly state "compatible with TCGs; not affiliated with Wizards of the Coast"
+1. WHEN accepting THEN the system SHALL generate PDF receipt P95 ≤2s
+2. WHEN generating receipt THEN the system SHALL show items, qty, condition, prices, totals per side
+3. WHEN completing THEN the system SHALL auto-update both inventories atomically
+4. WHEN requested (P1) THEN the system SHALL optionally email the receipt
+5. WHEN generating THEN the system SHALL verify accuracy of values/quantities
 
-### Requirement 9
+### Requirement 5 — Event Scope & Kiosk (Anonymous) [P0]
 
-**User Story:** As a platform user, I want the interface to be accessible and performant, so that I can use the service effectively regardless of my abilities or device.
-
-#### Acceptance Criteria
-
-1. WHEN the interface loads THEN it SHALL meet accessibility standards with proper labels and focus order
-2. WHEN measuring Core Web Vitals THEN the landing page SHALL achieve green scores
-3. WHEN users navigate the interface THEN keyboard navigation SHALL work for all interactive elements
-4. WHEN the application loads THEN it SHALL be responsive across desktop and mobile devices
-5. WHEN displaying data tables THEN they SHALL include proper headers and sorting capabilities
-
-### Requirement 10
-
-**User Story:** As a user, I want to select different TCG games and price sources per session, so that I can trade cards from multiple games using appropriate pricing.
+**User Story:** As an LGS, I host scoped trading during events.
 
 #### Acceptance Criteria
 
-1. WHEN creating a trade session THEN the system SHALL allow selection of game type (MTG, Pokémon, etc.)
-2. WHEN selecting price sources THEN the system SHALL offer options like TCGplayer market vs store buylist in LGS mode
-3. WHEN computing trade values THEN the system SHALL use the chosen price source for all calculations
-4. WHEN displaying prices THEN the system SHALL show currency, price source, and as-of timestamp
-5. WHEN users need price adjustments THEN the system SHALL allow manual override at line-item level with explanatory tooltip
+1. WHEN creating event THEN the system SHALL generate unique room code
+2. WHEN matching THEN the system SHALL scope to event participants only
+3. WHEN showing nearby matches THEN the system SHALL show event-only candidates
+4. WHEN ~50 users (P1) THEN the system SHALL achieve nearby matches P95 <1s
+5. WHEN kiosk THEN the system SHALL show anonymous rotating match prompts
 
-### Requirement 11
+### Requirement 6 — Pricing Data & Staleness [P0]
 
-**User Story:** As a trader, I want to specify exact printings, languages, and conditions, so that trades reflect the true value and desirability of specific card variants.
-
-#### Acceptance Criteria
-
-1. WHEN adding cards to inventory THEN the system SHALL support specific printings (set/collector number), language, foil/etched variants
-2. WHEN calculating values THEN the system SHALL apply condition multipliers based on card condition using documented defaults (NM=1.0, LP=0.9, MP=0.75, HP=0.5) with LGS override capability
-3. WHEN matching trades THEN the system SHALL respect minimum condition and foil preferences from want lists
-4. WHEN displaying coverage badges THEN the system SHALL indicate satisfaction of minCondition and foilOk constraints
-5. WHEN normalizing card data THEN the system SHALL handle different printings and language variants correctly
-
-### Requirement 12
-
-**User Story:** As a player at events with poor signal, I want to continue trading offline, so that connectivity issues don't prevent me from participating.
+**User Story:** Trades use accurate market values.
 
 #### Acceptance Criteria
 
-1. WHEN the app is accessed THEN it SHALL be installable as a PWA on mobile devices
-2. WHEN offline THEN the system SHALL cache the last price snapshot for trade calculations
-3. WHEN generating QR codes and sessions THEN the system SHALL work offline-first with local storage
-4. WHEN receipts are generated offline THEN the system SHALL queue them to send when connectivity returns
-5. IF price data is older than 24 hours THEN the system SHALL display a stale-data banner to users and provide "Clear offline data" control with storage quota status in PWA
+1. WHEN updating prices THEN the system SHALL pull from TCGplayer API within rate limits
+2. WHEN storing THEN the system SHALL store market/low/high with timestamp
+3. WHEN API unavailable THEN the system SHALL fallback to cached snapshots
+4. WHEN daily worker (P1) THEN the system SHALL complete within API budget, P95 ≤10 min
+5. WHEN displaying THEN the system SHALL show as-of timestamp; log snapshot version per trade/receipt
 
-### Requirement 13
+### Requirement 7 — Subscriptions & Entitlements [P0]
 
-**User Story:** As a player at events, I want to control my visibility and privacy, so that I can participate safely without unwanted contact.
-
-#### Acceptance Criteria
-
-1. WHEN joining events THEN the system SHALL default to private visibility mode
-2. WHEN opting into event visibility THEN the system SHALL require explicit opt-in and time-box the visibility with auto-expiry 2 hours after event end
-3. WHEN displaying kiosk information THEN the system SHALL show only anonymous prompts without personal details
-4. WHEN sharing contact information THEN the system SHALL require explicit consent before sharing emails
-5. WHEN event ends THEN the system SHALL automatically revert to private visibility
-
-### Requirement 14
-
-**User Story:** As a platform operator, I want comprehensive monitoring and abuse prevention, so that I can run pilots safely and maintain service quality.
+**User Story:** Monetize via Free/Pro/LGS with clean upsells.
 
 #### Acceptance Criteria
 
-1. WHEN users create QR codes or sessions THEN the system SHALL enforce rate limits to prevent abuse
-2. WHEN trades are accepted THEN the system SHALL log audit trails for receipts and trade completion
-3. WHEN measuring performance THEN the system SHALL maintain 99% suggestion latency under 3 seconds and event matches under 1 second
-4. WHEN system health is checked THEN the system SHALL provide a health page with key metrics
-5. WHEN errors occur THEN the system SHALL track error budgets and SLOs for operational monitoring
+1. WHEN processing payments THEN the system SHALL process via Stripe
+2. WHEN checking entitlements THEN the system SHALL enforce by plan
+3. WHEN Free overage THEN the system SHALL show upgrade modal (Pro $5/mo; LGS $15–19/mo)
+4. WHEN payment fails THEN the system SHALL gracefully handle errors
+5. WHEN expiry THEN the system SHALL downgrade to Free limits
 
-### Requirement 15
+### Requirement 8 — Security, Privacy, Legal [P0]
 
-**User Story:** As a user, I want to export and delete my data, so that I maintain control over my personal information and can migrate if needed.
-
-#### Acceptance Criteria
-
-1. WHEN requesting data export THEN the system SHALL provide CSV/JSON export of inventory, wants, and receipts
-2. WHEN deleting account THEN the system SHALL purge all personally identifiable information
-3. WHEN retaining receipts THEN the system SHALL keep them for a configurable number of days for legal compliance
-4. WHEN exporting data THEN the system SHALL include all user-generated content in standard formats
-5. WHEN data is deleted THEN the system SHALL confirm complete removal within specified timeframes
-
-### Requirement 16
-
-**User Story:** As a Free/Pro/LGS user, I want clear limits and smooth upgrade paths, so that I understand what I can do and how to get more features.
+**User Story:** I can use the service with confidence.
 
 #### Acceptance Criteria
 
-1. WHEN using Free tier THEN the system SHALL limit to 100 inventory items, 50 wants, 10 suggestions/day, 1 event/month
-2. WHEN using Pro tier THEN the system SHALL provide unlimited inventory/wants, notifications, and CSV import
-3. WHEN using LGS tier THEN the system SHALL enable kiosk mode, event codes, and co-branding options
-4. WHEN approaching limits THEN the system SHALL display graceful limit banners and upgrade modals
-5. WHEN limits are exceeded THEN the system SHALL prevent further actions while maintaining existing functionality
+1. WHEN logging THEN the system SHALL have no PII in logs; RLS on key tables; analytics are aggregate only
+2. WHEN preventing abuse THEN the system SHALL rate limit APIs
+3. WHEN authenticating THEN the system SHALL use secure email link (Supabase)
+4. WHEN displaying legal THEN the system SHALL show ToS/Privacy displayed and linked
+5. WHEN disclaiming THEN the system SHALL state "Compatible with trading card games; not affiliated with Wizards of the Coast."
 
-### Requirement 17
+### Requirement 9 — Accessibility & Performance [P0]
 
-**User Story:** As a user, I want finalized trades to be reproducible and safe from double-spend, so that I can trust the trading system's integrity.
-
-#### Acceptance Criteria
-
-1. WHEN a trade is accepted THEN the system SHALL store an immutable snapshot including items with printing/language details, price source, snapshot version, fairness threshold, and manual overrides
-2. WHEN items are included in an active proposal THEN the system SHALL reserve them for up to 5 minutes to prevent conflicts
-3. WHEN conflicting proposals are attempted THEN the system SHALL fail gracefully with a "recalculate" banner and clear explanation
-4. WHEN reservations expire THEN the system SHALL automatically release items and notify affected sessions
-5. WHEN viewing completed trades THEN the system SHALL display the exact snapshot data used for that trade
-
-### Requirement 18
-
-**User Story:** As a user or LGS, I want values shown in the correct currency for my region, so that I can understand pricing in familiar terms.
+**User Story:** The app is usable and fast on any device.
 
 #### Acceptance Criteria
 
-1. WHEN displaying prices THEN the system SHALL support USD at launch and show currency symbols everywhere prices appear
-2. IF EUR support is enabled THEN the system SHALL convert using daily FX rates or native EU sources with clear labeling
-3. WHEN configuring events THEN LGS SHALL be able to set preferred currency and price source
-4. WHEN generating receipts THEN the system SHALL clearly state the currency and conversion method used
-5. WHEN prices are converted THEN the system SHALL show the conversion rate and timestamp
+1. WHEN loading THEN the system SHALL have proper labels, focus order, landmarks (WCAG basics)
+2. WHEN measuring (P1) THEN the system SHALL achieve green Core Web Vitals on landing page
+3. WHEN navigating THEN the system SHALL work keyboard navigation for all interactive elements
+4. WHEN displaying THEN the system SHALL use mobile-first responsive layout
+5. WHEN showing tables THEN the system SHALL have headers and sorting (where applicable)
 
-### Requirement 19
+### Requirement 10 — Game & Price Source Selection [P1]
 
-**User Story:** As an LGS, I want trades to optionally reference my buylist prices, so that trades reflect my actual purchasing rates.
-
-#### Acceptance Criteria
-
-1. WHEN managing LGS settings THEN the system SHALL allow CSV buylist upload with SKU, set, condition multipliers, and prices
-2. WHEN session uses "Buylist" mode THEN the system SHALL compute values from the uploaded list with market fallback for missing SKUs
-3. WHEN displaying buylist prices THEN the system SHALL show badges indicating buylist vs market pricing
-4. WHEN generating receipts THEN the system SHALL clearly state whether Market or Buylist pricing was used
-5. WHEN buylist data is missing THEN the system SHALL gracefully fallback to market prices with clear indicators
-
-### Requirement 20
-
-**User Story:** As a Pro user, I want match alerts for high-priority wants; as an LGS, I want to send event reminders to participants.
+**User Story:** Choose game and price source per session.
 
 #### Acceptance Criteria
 
-1. WHEN Pro users enable notifications THEN the system SHALL send email/push alerts for new matches on Must-have wants with opt-in controls
-2. WHEN LGS creates events THEN the system SHALL allow sending reminder emails to opted-in participants with required unsubscribe links
-3. WHEN users join events THEN the system SHALL provide clear opt-in choices for notifications and contact preferences
-4. WHEN sending notifications THEN the system SHALL respect user preferences and provide easy unsubscribe options
-5. WHEN notification limits are reached THEN the system SHALL queue notifications and respect rate limits
+1. WHEN selecting game THEN the system SHALL select at session start (MTG at P0; add others in P1/P2)
+2. WHEN offering sources THEN the system SHALL offer price sources (Market vs LGS Buylist in LGS mode)
+3. WHEN calculating THEN the system SHALL use chosen source consistently
+4. WHEN displaying THEN the system SHALL show currency, source, as-of
+5. WHEN overriding THEN the system SHALL allow manual line overrides with tooltip
 
-### Requirement 21
+### Requirement 11 — Variants: Printing, Language, Condition [P0]
 
-**User Story:** As a platform operator, I need safe feature rollout and reliable recovery capabilities, so that I can maintain service quality and handle incidents.
+**User Story:** Specific variants matter and affect value.
 
 #### Acceptance Criteria
 
-1. WHEN deploying features THEN the system SHALL use feature flags to gate kiosk mode, notifications, and multi-TCG functionality
-2. WHEN backing up data THEN the system SHALL perform nightly encrypted backups with documented restore procedures
-3. WHEN checking system health THEN the system SHALL provide a health page showing DB, price worker, and queue status in JSON format
-4. WHEN managing data retention THEN the system SHALL implement clear retention policies (e.g., 30 days for backups)
-5. WHEN incidents occur THEN the system SHALL provide monitoring and alerting for all critical system components
+1. WHEN storing inventory THEN the system SHALL support set/collector #, language, foil/etched
+2. WHEN applying multipliers (P1) THEN the system SHALL apply condition multipliers (defaults: NM 1.0, LP 0.9, MP 0.75, HP 0.5) with LGS override
+3. WHEN matching THEN the system SHALL respect minCondition and foilOk
+4. WHEN showing coverage THEN the system SHALL reflect these constraints in badges
+5. WHEN normalizing THEN the system SHALL normalize distinct printings and languages correctly
+
+### Requirement 12 — PWA & Offline Basics [P0 → P1]
+
+**User Story:** Works at shops with weak signal.
+
+#### Acceptance Criteria
+
+1. WHEN installing [P0] THEN the system SHALL be installable PWA on mobile
+2. WHEN caching [P0] THEN the system SHALL cache last price snapshot for calculations
+3. WHEN offline [P1] THEN the system SHALL support offline QR/session & queued receipts
+4. WHEN stale (P1) THEN the system SHALL show stale-data banner if snapshot >24h old
+5. WHEN managing (P1) THEN the system SHALL provide Clear offline data + storage quota status
+
+### Requirement 13 — Event Privacy & Consent [P0]
+
+**User Story:** I control my visibility.
+
+#### Acceptance Criteria
+
+1. WHEN joining THEN the system SHALL default private
+2. WHEN opting in (P1) THEN the system SHALL require explicit opt-in to event visibility, auto-expire +2h after event end
+3. WHEN kiosk THEN the system SHALL be anonymous only—no PII
+4. WHEN sharing (P1) THEN the system SHALL require explicit consent for contact info
+5. WHEN ending THEN the system SHALL auto-revert to private at event end
+
+### Requirement 14 — Monitoring & Abuse Prevention [P0 → P1]
+
+**User Story:** The service stays healthy during pilots.
+
+#### Acceptance Criteria
+
+1. WHEN creating QR/session [P0] THEN the system SHALL rate-limit; alert on spikes
+2. WHEN accepting trades [P0] THEN the system SHALL audit trail on trade accept/receipt
+3. WHEN measuring SLOs (P1) THEN the system SHALL achieve Suggestion P95 <3s; Event matches P95 <1s (99% goal)
+4. WHEN checking health (P1) THEN the system SHALL provide JSON health endpoint (DB, price worker, queue)
+5. WHEN tracking (P1) THEN the system SHALL track error budgets for ops
+
+### Requirement 15 — Data Portability & Deletion [P1]
+
+**User Story:** I can export or delete my data.
+
+#### Acceptance Criteria
+
+1. WHEN exporting THEN the system SHALL export CSV/JSON (inventory, wants, receipts)
+2. WHEN deleting THEN the system SHALL delete account purges PII; confirm within 7 days
+3. WHEN retaining THEN the system SHALL retain receipts for configurable days (for compliance)
+4. WHEN exporting THEN the system SHALL include all user-generated content
+5. WHEN confirming THEN the system SHALL confirm deletion completion within SLA
+
+### Requirement 16 — Plan Limits & Upgrades [P0]
+
+**User Story:** I understand limits and how to upgrade.
+
+#### Acceptance Criteria
+
+1. WHEN Free THEN the system SHALL limit up to 100 inventory, 50 wants, 10 suggestions/day, 1 event/month
+2. WHEN Pro THEN the system SHALL provide unlimited + notifications + CSV import/export. (Notifications in Req 20.)
+3. WHEN LGS THEN the system SHALL provide kiosk, event codes, co-branding
+4. WHEN approaching THEN the system SHALL show friendly limit banners + upgrade modals
+5. WHEN exceeding THEN the system SHALL block new actions (existing data unaffected)
+
+### Requirement 17 — Immutable Trade Snapshot & Reservations [P0]
+
+**User Story:** Trades are reproducible and conflict-safe.
+
+#### Acceptance Criteria
+
+1. WHEN accepting THEN the system SHALL store immutable snapshot: item variants, price source, snapshot version, fairness threshold, manual overrides
+2. WHEN proposing THEN the system SHALL reserve items in active proposals up to 5 minutes
+3. WHEN conflicting THEN the system SHALL fail gracefully with "Recalculate" banner
+4. WHEN expiring THEN the system SHALL release reservations and notify sessions
+5. WHEN viewing THEN the system SHALL show exact snapshot for completed trades
+
+### Requirement 18 — Currency & Region [P2]
+
+**User Story:** Show values in the right currency.
+
+#### Acceptance Criteria
+
+1. WHEN launching THEN the system SHALL use USD everywhere at launch (P0)
+2. WHEN adding EUR (P2) THEN the system SHALL add via FX or EU source; label method & rate/timestamp
+3. WHEN configuring (P2) THEN the system SHALL allow LGS to set preferred currency/source per event
+4. WHEN receipting THEN the system SHALL state currency and conversion method
+5. WHEN converting THEN the system SHALL show FX rate & timestamp on converted values
+
+### Requirement 19 — LGS Buylist Mode [P2]
+
+**User Story:** Use the store's buylist for trades.
+
+#### Acceptance Criteria
+
+1. WHEN uploading THEN the system SHALL upload CSV (SKU, set, condition multipliers, price)
+2. WHEN computing THEN the system SHALL compute in Buylist mode; fallback to Market for missing SKUs with badge
+3. WHEN showing THEN the system SHALL show Buylist vs Market badges
+4. WHEN receipting THEN the system SHALL state which mode was used
+5. WHEN missing THEN the system SHALL gracefully fallback & indicators when buylist entries missing
+
+### Requirement 20 — Notifications (Pro) & Event Mail [P1]
+
+**User Story:** Pro users get match alerts; LGS can send reminders.
+
+#### Acceptance Criteria
+
+1. WHEN Pro THEN the system SHALL opt-in to match alerts for Must wants (email/push)
+2. WHEN LGS THEN the system SHALL send event reminders to opted-in participants (unsubscribe required)
+3. WHEN joining THEN the system SHALL provide clear consent options
+4. WHEN sending THEN the system SHALL honor preferences; provide easy unsubscribe
+5. WHEN limiting THEN the system SHALL rate-limit and queue notifications
+
+### Requirement 21 — Ops: Flags, Backups, Recovery [P1]
+
+**User Story:** Safe rollout and reliable recovery.
+
+#### Acceptance Criteria
+
+1. WHEN deploying THEN the system SHALL use feature flags gate kiosk, notifications, multi-TCG
+2. WHEN backing up THEN the system SHALL perform nightly encrypted backups, documented restore drill; retention policy (e.g., 30 days)
+3. WHEN checking health THEN the system SHALL provide health JSON shows DB, price worker, queues
+4. WHEN retaining THEN the system SHALL implement clear data retention policies in docs
+5. WHEN monitoring THEN the system SHALL provide monitoring/alerting on critical components
