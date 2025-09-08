@@ -47,7 +47,13 @@ Multi-currency, LGS buylist integration, and advanced features based on user dem
   - Create completion-docs/task-1-completion.md with build instructions and testing steps
   - _Requirements: 9.4, 9.5_
 
-- [ ] 2. Configure Supabase integration and authentication
+- [x] 2. Configure Supabase integration and authentication
+
+
+
+
+
+  - Review development-rules.md for compliance and approach
   - Initialize Supabase project and configure environment variables
   - Set up Supabase client with TypeScript types generation
   - Implement email-based authentication with Supabase Auth
@@ -58,6 +64,7 @@ Multi-currency, LGS buylist integration, and advanced features based on user dem
   - _Requirements: 8.3_
 
 - [ ] 3. Create database schema and migrations
+  - Review development-rules.md for compliance and approach
   - Write SQL migrations for all core tables (users, items, inventory, wants, prices, trade_sessions, events)
   - Set up database indexes for performance optimization
   - Configure row-level security policies for data protection
@@ -65,6 +72,7 @@ Multi-currency, LGS buylist integration, and advanced features based on user dem
   - _Requirements: 1.1, 1.4, 6.1, 8.1_
 
 - [ ] 4. Implement MTG-only card catalog system with search functionality [P0]
+  - Review development-rules.md for compliance and approach
   - Create Item model supporting MTG with language and finish variants (multi-game deferred to P1)
   - Build full-text search API endpoint with PostgreSQL search vectors for MTG cards
   - Implement Scryfall API integration for bulk MTG card data import
@@ -75,6 +83,7 @@ Multi-currency, LGS buylist integration, and advanced features based on user dem
   - _Requirements: 1.2, 6.1 (P0 scope: MTG-only)_
 
 - [ ] 5. Build inventory management system with printing specifics
+  - Review development-rules.md for compliance and approach
   - Create Inventory model with language, finish, and condition tracking
   - Implement inventory API endpoints with printing-specific validation
   - Build mobile-first inventory management UI with printing selection controls
@@ -87,6 +96,7 @@ Multi-currency, LGS buylist integration, and advanced features based on user dem
   - _Requirements: 1.1, 1.5, 11.1, 16.1_
 
 - [ ] 6. Implement want list management system with printing constraints
+  - Review development-rules.md for compliance and approach
   - Create Want model with language preferences, finish options, and condition constraints
   - Build want list API endpoints with printing-specific validation
   - Design mobile-optimized want list interface with priority and constraint indicators
@@ -99,6 +109,7 @@ Multi-currency, LGS buylist integration, and advanced features based on user dem
   - _Requirements: 1.4, 11.2, 11.4, 16.1_
 
 - [ ] 7. Integrate TCGplayer Market pricing system with condition multipliers [P0]
+  - Review development-rules.md for compliance and approach
   - Set up TCGplayer Market API integration (multi-source deferred to P1/P2)
   - Create Price model with USD-only pricing, condition multipliers (NM 1.0, LP 0.9, MP 0.75, HP 0.5), and finish multipliers
   - Implement daily price synchronization with version tracking for audit trails
@@ -110,6 +121,7 @@ Multi-currency, LGS buylist integration, and advanced features based on user dem
   - _Requirements: 6.1, 6.2, 6.3, 6.4, 6.5 (P0 scope: Market pricing, USD only)_
 
 - [ ] 8. Develop core matching algorithm with printing awareness
+  - Review development-rules.md for compliance and approach
   - Implement coverage-first matching algorithm respecting language and finish constraints
   - Create configurable trade fairness validation (±5% default, ±2-10% for LGS)
   - Build make-it-even suggestion system preferring small cards and printing swaps
@@ -122,6 +134,7 @@ Multi-currency, LGS buylist integration, and advanced features based on user dem
   - _Requirements: 2.1, 2.2, 2.3, 2.4, 2.5, 2.6, 11.3, 11.4_
 
 - [ ] 9. Build secure QR code trading session system [P0]
+  - Review development-rules.md for compliance and approach
   - Create TradeSession model with MTG-only, TCGplayer Market pricing, and ±5% fairness threshold
   - Implement single-use QR token generation with 2-minute TTL and 10/min/IP rate limiting
   - Build session joining functionality via QR code scanning with strict expiry handling
@@ -134,6 +147,7 @@ Multi-currency, LGS buylist integration, and advanced features based on user dem
   - _Requirements: 3.1, 3.2, 3.3, 3.4, 3.5, 14.1 (P0 scope: Enhanced security)_
 
 - [ ] 10. Implement real-time trade proposal system
+  - Review development-rules.md for compliance and approach
   - Create TradeProposal model with status tracking
   - Build WebSocket handlers for real-time trade communication
   - Implement trade proposal creation and validation
@@ -145,6 +159,7 @@ Multi-currency, LGS buylist integration, and advanced features based on user dem
   - _Requirements: 2.1, 2.5_
 
 - [ ] 11. Develop mobile-first trading interface
+  - Review development-rules.md for compliance and approach
   - Design touch-optimized trade proposal UI with swipe gestures
   - Implement camera integration for QR code scanning
   - Build responsive trade session interface with real-time updates
@@ -156,6 +171,7 @@ Multi-currency, LGS buylist integration, and advanced features based on user dem
   - _Requirements: 3.1, 9.3, 9.4_
 
 - [ ] 12. Create PDF receipt generation system with audit trail
+  - Review development-rules.md for compliance and approach
   - Implement PDF generation using PDFKit with complete trade details and price versions
   - Design receipt template showing printing details, price sources, and manual overrides
   - Add email delivery functionality with consent verification for receipts
@@ -168,6 +184,7 @@ Multi-currency, LGS buylist integration, and advanced features based on user dem
   - _Requirements: 4.1, 4.2, 4.4, 4.5, 6.5, 12.4, 13.4_
 
 - [ ] 13. Build inventory update system for completed trades
+  - Review development-rules.md for compliance and approach
   - Implement atomic inventory updates for trade completion
   - Create trade history tracking and audit trail
   - Add rollback functionality for failed trade updates
@@ -177,6 +194,7 @@ Multi-currency, LGS buylist integration, and advanced features based on user dem
   - _Requirements: 4.3_
 
 - [ ] 14. Implement event system with privacy controls and game-specific settings
+  - Review development-rules.md for compliance and approach
   - Create Event and EventMember models with game type, price source defaults, and privacy settings
   - Build event creation with configurable fairness thresholds and time-boxed visibility
   - Implement event-scoped trade matching with P95 <1s performance for 50+ users
@@ -187,6 +205,7 @@ Multi-currency, LGS buylist integration, and advanced features based on user dem
   - _Requirements: 5.1, 5.2, 5.4, 5.5, 10.1, 10.2, 13.1, 13.2, 13.4, 13.5, 14.3, 16.1_
 
 - [ ] 15. Develop privacy-focused kiosk mode for LGS displays
+  - Review development-rules.md for compliance and approach
   - Create kiosk-optimized UI showing only anonymous aggregated match data
   - Implement anonymous match board with rotating prompts and no personal information
   - Build event-scoped nearby matches display respecting privacy settings
@@ -197,6 +216,7 @@ Multi-currency, LGS buylist integration, and advanced features based on user dem
   - _Requirements: 5.3, 5.5, 13.3, 16.3_
 
 - [ ] 16. Integrate Stripe payment system
+  - Review development-rules.md for compliance and approach
   - Set up Stripe integration with subscription plans (Free/Pro/LGS)
   - Implement checkout flow for subscription upgrades
   - Build webhook handlers for payment events
@@ -206,6 +226,7 @@ Multi-currency, LGS buylist integration, and advanced features based on user dem
   - _Requirements: 7.1, 7.2, 7.3, 7.4, 7.5_
 
 - [ ] 17. Implement PWA features and basic offline functionality [P0]
+  - Review development-rules.md for compliance and approach
   - Configure service worker with price snapshot caching strategies
   - Add PWA manifest with mobile-optimized settings for installation
   - Implement offline price cache for trade calculations (P0)
@@ -215,6 +236,7 @@ Multi-currency, LGS buylist integration, and advanced features based on user dem
   - _Requirements: 12.1, 12.2 (P0), 12.3, 12.4, 12.5 (P1)_
 
 - [ ] 18. Add security and rate limiting systems
+  - Review development-rules.md for compliance and approach
   - Implement API rate limiting with Redis-based counters
   - Add input validation and sanitization middleware
   - Create PII protection in logging systems
@@ -226,6 +248,7 @@ Multi-currency, LGS buylist integration, and advanced features based on user dem
   - _Requirements: 8.1, 8.2, 8.4_
 
 - [ ] 19. Create analytics and monitoring system
+  - Review development-rules.md for compliance and approach
   - Integrate Plausible Analytics with privacy-focused tracking
   - Implement custom event tracking for key user actions
   - Build performance monitoring and error reporting
@@ -237,6 +260,7 @@ Multi-currency, LGS buylist integration, and advanced features based on user dem
   - _Requirements: 8.5_
 
 - [ ] 20. Build legal compliance and user safety features
+  - Review development-rules.md for compliance and approach
   - Create Terms of Service and Privacy Policy pages
   - Add disclaimer about TCG compatibility and non-affiliation
   - Implement user data export and deletion functionality
@@ -248,6 +272,7 @@ Multi-currency, LGS buylist integration, and advanced features based on user dem
   - _Requirements: 8.4, 8.5_
 
 - [ ] 21. Optimize performance for mobile networks
+  - Review development-rules.md for compliance and approach
   - Implement code splitting and lazy loading for mobile performance
   - Add image optimization and responsive image delivery
   - Create performance budgets and monitoring
@@ -259,6 +284,7 @@ Multi-currency, LGS buylist integration, and advanced features based on user dem
   - _Requirements: 9.1, 9.2_
 
 - [ ] 22. Prepare application for comprehensive manual testing
+  - Review development-rules.md for compliance and approach
   - Ensure all features work end-to-end in browser for complete trade flows
   - Verify mobile functionality works properly with device testing
   - Optimize application performance for manual load testing scenarios
@@ -270,6 +296,7 @@ Multi-currency, LGS buylist integration, and advanced features based on user dem
   - _Requirements: 9.3, 9.5_
 
 - [ ] 23. Implement deployment and DevOps pipeline
+  - Review development-rules.md for compliance and approach
   - Set up production deployment pipeline with Vercel/Netlify
   - Configure environment-specific configurations and secrets
   - Add database migration and rollback procedures
@@ -281,6 +308,7 @@ Multi-currency, LGS buylist integration, and advanced features based on user dem
   - _Requirements: 8.1, 8.2_
 
 - [ ] 24. Create user onboarding and help system
+  - Review development-rules.md for compliance and approach
   - Build interactive onboarding flow for new users
   - Create in-app help system and tooltips
   - Add tutorial mode for first-time trading
@@ -292,6 +320,7 @@ Multi-currency, LGS buylist integration, and advanced features based on user dem
   - _Requirements: 7.2_
 
 - [ ] 25. Implement comprehensive audit logging and monitoring system
+  - Review development-rules.md for compliance and approach
   - Create audit log system tracking all trade actions, user activities, and system events
   - Build admin dashboard for monitoring key metrics and SLO compliance
   - Implement health check endpoints with detailed system status information
@@ -304,6 +333,7 @@ Multi-currency, LGS buylist integration, and advanced features based on user dem
   - _Requirements: 14.1, 14.2, 14.3, 14.4, 14.5_
 
 - [ ] 26. Build data export and account deletion system
+  - Review development-rules.md for compliance and approach
   - Implement comprehensive data export functionality (CSV/JSON for inventory, wants, receipts)
   - Create account deletion system with PII purging and configurable receipt retention
   - Build data portability features with standard format exports
@@ -316,6 +346,7 @@ Multi-currency, LGS buylist integration, and advanced features based on user dem
   - _Requirements: 15.1, 15.2, 15.3, 15.4, 15.5_
 
 - [ ] 27. Implement subscription tier system with graceful limit enforcement
+  - Review development-rules.md for compliance and approach
   - Build subscription tier management with clear feature differentiation
   - Implement graceful limit banners and upgrade modals for Free tier users
   - Add Pro tier features (unlimited inventory/wants, notifications, CSV import)
@@ -328,6 +359,7 @@ Multi-currency, LGS buylist integration, and advanced features based on user dem
   - _Requirements: 16.1, 16.2, 16.3, 16.4, 16.5_
 
 - [ ] 28. Enhance offline functionality and data synchronization
+  - Review development-rules.md for compliance and approach
   - Implement comprehensive offline data caching for inventory and want lists
   - Build background sync for trade proposals and receipt delivery
   - Add stale data indicators and offline mode notifications
@@ -340,6 +372,7 @@ Multi-currency, LGS buylist integration, and advanced features based on user dem
   - _Requirements: 12.1, 12.2, 12.3, 12.4, 12.5_
 
 - [ ] 29. Prepare pilot-ready scenarios for manual quality assurance
+  - Review development-rules.md for compliance and approach
   - Create manual test scenarios for multi-price source validation (market vs buylist)
   - Prepare printing/language/condition constraint testing procedures
   - Set up offline event testing scenarios with cached prices and queued receipts
@@ -352,6 +385,7 @@ Multi-currency, LGS buylist integration, and advanced features based on user dem
   - _Requirements: All pilot test scenarios_
 
 - [ ] 30. Implement immutable trade snapshots and concurrency control [P0 - ELEVATED]
+  - Review development-rules.md for compliance and approach
   - Create item reservation system to prevent double-spend during active proposals (5-minute timeout)
   - Build immutable trade snapshot storage with complete printing details, price versions, fairness thresholds, and manual overrides
   - Implement automatic reservation cleanup and conflict detection with graceful failure
@@ -363,6 +397,7 @@ Multi-currency, LGS buylist integration, and advanced features based on user dem
   - _Requirements: 17.1, 17.2, 17.3, 17.4, 17.5 (P0 - Critical for pilot integrity)_
 
 - [ ] 31. Build LGS buylist integration system
+  - Review development-rules.md for compliance and approach
   - Create LGS buylist upload functionality with CSV parsing and validation
   - Implement buylist price computation with market fallback for missing SKUs
   - Build buylist management interface with SKU mapping and price override capabilities
@@ -374,6 +409,7 @@ Multi-currency, LGS buylist integration, and advanced features based on user dem
   - _Requirements: 19.1, 19.2, 19.3, 19.4, 19.5_
 
 - [ ] 32. Implement currency support and regional pricing
+  - Review development-rules.md for compliance and approach
   - Add multi-currency support starting with USD and EUR with clear labeling
   - Build daily FX rate integration and conversion display with timestamps
   - Create currency selection per event and session with conversion indicators
@@ -385,6 +421,7 @@ Multi-currency, LGS buylist integration, and advanced features based on user dem
   - _Requirements: 18.1, 18.2, 18.3, 18.4, 18.5_
 
 - [ ] 33. Build Pro notifications and LGS event reminder system
+  - Review development-rules.md for compliance and approach
   - Implement push notification system for Pro users with Must-want match alerts
   - Create email notification preferences with granular opt-in controls
   - Build LGS event reminder system with participant opt-in and unsubscribe links
@@ -396,6 +433,7 @@ Multi-currency, LGS buylist integration, and advanced features based on user dem
   - _Requirements: 20.1, 20.2, 20.3, 20.4, 20.5_
 
 - [ ] 34. Implement feature flags and operational safety systems
+  - Review development-rules.md for compliance and approach
   - Create feature flag system for kiosk mode, notifications, and multi-TCG functionality
   - Build nightly encrypted backup system with documented restore procedures
   - Implement comprehensive health check endpoints with DB, worker, and queue status
@@ -407,6 +445,7 @@ Multi-currency, LGS buylist integration, and advanced features based on user dem
   - _Requirements: 21.1, 21.2, 21.3, 21.4, 21.5_
 
 - [ ] 35. Enhance security with QR token management and RLS hardening [P0 - CRITICAL]
+  - Review development-rules.md for compliance and approach
   - Implement single-use QR tokens with strict 2-minute TTL (no device scoping for P0)
   - Add QR token invalidation on use and rate limiting (10/min/IP) with IP tracking table
   - Harden row-level security policies on Inventory, Want, Trade, EventMember tables
@@ -418,6 +457,7 @@ Multi-currency, LGS buylist integration, and advanced features based on user dem
   - _Requirements: 8.1, 14.1 (P0 - Enhanced security for pilot)_
 
 - [ ] 36. Prepare comprehensive pilot test scenarios for manual testing
+  - Review development-rules.md for compliance and approach
   - Prepare manual test procedures for concurrent session conflicts with chase cards
   - Create manual override persistence testing procedures for trade snapshots and receipts
   - Set up kiosk PII protection testing procedures with event scope validation
@@ -430,6 +470,7 @@ Multi-currency, LGS buylist integration, and advanced features based on user dem
   - _Requirements: All pilot test scenarios_
 
 - [ ] 37. Final P0 integration testing and pilot launch preparation
+  - Review development-rules.md for compliance and approach
   - Conduct comprehensive end-to-end testing for MTG-only, USD-only, Market pricing scenarios
   - Perform security audit focusing on QR token security, rate limiting, and RLS policies
   - Execute performance testing with P95 targets: suggestions <3s, event matches <1s, receipts <2s
@@ -443,6 +484,7 @@ Multi-currency, LGS buylist integration, and advanced features based on user dem
 ## Integration & Automation Testing (End of Development Cycle)
 
 - [ ] 38. Build comprehensive integration test suite
+  - Review development-rules.md for compliance and approach
   - Create automated end-to-end test scenarios covering complete trade workflows
   - Build API integration tests for all external services (Scryfall, TCGplayer, Stripe)
   - Implement database operation validation tests
@@ -452,6 +494,7 @@ Multi-currency, LGS buylist integration, and advanced features based on user dem
   - Create completion-docs/task-38-completion.md with integration test execution procedures
 
 - [ ] 39. Implement automation scripts and deployment pipeline
+  - Review development-rules.md for compliance and approach
   - Create deployment automation scripts for production environment
   - Build database migration and rollback automation
   - Implement environment setup and configuration automation
