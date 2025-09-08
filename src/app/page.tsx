@@ -1,4 +1,10 @@
+'use client'
+
+import { useAuth } from '@/contexts/AuthContext'
+import Link from 'next/link'
+
 export default function Home() {
+  const { user, loading, signOut } = useAuth()
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800">
       {/* Mobile-first header */}
@@ -11,9 +17,36 @@ export default function Home() {
               </h1>
             </div>
             <div className="flex items-center space-x-4">
-              <span className="text-sm text-gray-500 dark:text-gray-400">
-                P0 MVP
-              </span>
+              {loading ? (
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
+              ) : user ? (
+                <div className="flex items-center space-x-4">
+                  <span className="text-sm text-gray-600 dark:text-gray-400">
+                    {user.email}
+                  </span>
+                  <button
+                    onClick={signOut}
+                    className="text-sm text-red-600 hover:text-red-700 dark:text-red-400"
+                  >
+                    Sign Out
+                  </button>
+                </div>
+              ) : (
+                <div className="flex items-center space-x-2">
+                  <Link
+                    href="/login"
+                    className="text-sm text-blue-600 hover:text-blue-700 dark:text-blue-400"
+                  >
+                    Sign In
+                  </Link>
+                  <Link
+                    href="/signup"
+                    className="text-sm bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700"
+                  >
+                    Sign Up
+                  </Link>
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -79,9 +112,15 @@ export default function Home() {
         {/* CTA Section */}
         <div className="mt-12 text-center">
           <div className="inline-flex flex-col sm:flex-row gap-4">
-            <button className="btn-primary touch-target">
-              Get Started
-            </button>
+            {user ? (
+              <Link href="/dashboard" className="btn-primary touch-target">
+                Go to Dashboard
+              </Link>
+            ) : (
+              <Link href="/signup" className="btn-primary touch-target">
+                Get Started
+              </Link>
+            )}
             <button className="touch-target px-6 py-3 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
               Learn More
             </button>
