@@ -79,7 +79,7 @@ Trade { id, aUserId, bUserId, itemsFromA, itemsFromB, valueA, valueB, coverageSc
 Each week targets ~6 hrs total (2 tasks for Josh, 1 for Ben). Spec references point to exact lines to start from.
 
 ### Week 1 — Oct 5–11: Search Foundation
-- [ ] Josh — Task 4 (trimmed): MTG card catalog + DB search
+- [x] Josh — Task 4 (trimmed): MTG card catalog + DB search
   - Specs: `.kiro/specs/trade-equalizer-platform/tasks.md` §4; `design.md` → Card Catalog, API (Card Catalog)
   - Outcome: DB-backed search with indexes; Scryfall subset import (e.g., top EDHREC); CLI stub for daily job
 - [ ] Ben — Task 6 (trimmed): Want list CRUD (basic priority field only)

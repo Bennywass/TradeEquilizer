@@ -162,6 +162,24 @@ For quick testing without full bulk import:
    
    You should receive `{ data, total, page, limit }`. The UI at `/trades/search` will prefer local results and fall back to Scryfall when empty.
 
+## Pricing API (Testing)
+
+The app includes a mock pricing endpoint for testing:
+
+```bash
+curl 'http://localhost:3000/api/prices/market?itemId=<UUID_FROM_CATALOG>'
+```
+
+Returns mock market prices with condition/finish multipliers. To use real TCGplayer data:
+
+1. Get API keys from [TCGplayer Developer Portal](https://docs.tcgplayer.com/)
+2. Add to `.env.local`:
+   ```
+   TCGPLAYER_API_KEY=your_key
+   TCGPLAYER_API_SECRET=your_secret
+   ```
+3. Replace the mock implementation in `src/app/api/prices/market/route.ts`
+
 ## Deploy on Vercel
 
 The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
