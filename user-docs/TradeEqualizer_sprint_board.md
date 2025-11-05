@@ -94,9 +94,10 @@ Each week targets ~6 hrs total (2 tasks for Josh, 1 for Ben). Spec references po
   - Outcome: Users can add/edit/delete wants with priority levels; advanced constraints deferred
 
 ### Week 2 — Oct 12–18: Pricing Integration
-- [ ] Josh — Task 7 (trimmed): TCGplayer Market pricing (on-demand fetch + cache)
+- [x] Josh — Task 7 (trimmed): TCGplayer Market pricing (on-demand fetch + cache)
   - Specs: tasks.md §7; design.md → Price model, Caching, API (Pricing)
   - Outcome: USD-only Market price caching; daily snapshot stub
+  - ✅ COMPLETED: Scryfall integration with fallback, 5-min caching, daily sync script
 - [ ] Ben — Task 17: PWA basics (manifest, SW, cache core routes)
   - Specs: tasks.md §17; design.md → PWA Details
   - Subtasks:
