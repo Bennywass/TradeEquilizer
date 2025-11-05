@@ -140,6 +140,46 @@ See `docs/database-schema.md` for detailed schema information.
 - [Supabase Documentation](https://supabase.com/docs) - learn about Supabase features
 - [Tailwind CSS](https://tailwindcss.com/docs) - utility-first CSS framework
 
+## Local Catalog: Import and Search (Testing)
+
+For quick testing without full bulk import:
+
+1. Generate a small MTG items seed from Scryfall:
+   
+   ```bash
+   node scripts/generate-seed-items.mjs
+   ```
+   
+   This writes SQL to `supabase/seed_items.sql`.
+
+2. Apply the SQL to your Supabase project (SQL Editor or CLI). The insert uses `ON CONFLICT (scryfall_id) DO NOTHING`.
+
+3. Test the local search endpoint:
+   
+   ```bash
+   curl 'http://localhost:3000/api/cards/search?q=lotus&limit=10'
+   ```
+   
+   You should receive `{ data, total, page, limit }`. The UI at `/trades/search` will prefer local results and fall back to Scryfall when empty.
+
+## Pricing API (Testing)
+
+The app includes a mock pricing endpoint for testing:
+
+```bash
+curl 'http://localhost:3000/api/prices/market?itemId=<UUID_FROM_CATALOG>'
+```
+
+Returns mock market prices with condition/finish multipliers. To use real TCGplayer data:
+
+1. Get API keys from [TCGplayer Developer Portal](https://docs.tcgplayer.com/)
+2. Add to `.env.local`:
+   ```
+   TCGPLAYER_API_KEY=your_key
+   TCGPLAYER_API_SECRET=your_secret
+   ```
+3. Replace the mock implementation in `src/app/api/prices/market/route.ts`
+
 ## Deploy on Vercel
 
 The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.

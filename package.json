@@ -5,7 +5,8 @@
   "scripts": {
     "dev": "next dev --turbopack",
     "build": "next build --turbopack",
-    "start": "next start"
+    "start": "next start",
+    "sync-prices": "node scripts/sync-prices.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "^0.7.0",
