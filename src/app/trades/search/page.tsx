@@ -37,6 +37,9 @@ export default function TradeSearchPage() {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [results, setResults] = useState<ScryfallCard[]>([])
+  const [addingToInventory, setAddingToInventory] = useState<string | null>(null)
+  const [addingToWants, setAddingToWants] = useState<string | null>(null)
+  const [successMessage, setSuccessMessage] = useState<string | null>(null)
   const fetchAbortRef = useRef<AbortController | null>(null)
 
   // Placeholder mock results to visualize layout (Magic: The Gathering)
@@ -123,6 +126,96 @@ export default function TradeSearchPage() {
     return () => clearTimeout(handle)
   }, [query])
 
+  const handleAddToInventory = async (card: DisplayCard) => {
+    if (!user) {
+      router.push('/login')
+      return
+    }
+
+    setAddingToInventory(card.id)
+    setError(null)
+    setSuccessMessage(null)
+
+    try {
+      // First, try to get the item ID from our catalog
+      // For now, we'll use the card ID as a placeholder
+      const response = await fetch('/api/inventory', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          itemId: card.id, // This will need to be the actual item ID from catalog
+          quantity: 1,
+          condition: 'NM',
+          language: 'en',
+          finish: 'normal',
+          tradable: true,
+        }),
+      })
+
+      if (!response.ok) {
+        if (response.status === 404) {
+          // API not implemented yet - redirect to inventory page
+          router.push('/inventory')
+          return
+        }
+        const errorData = await response.json()
+        throw new Error(errorData.error || 'Failed to add to inventory')
+      }
+
+      setSuccessMessage(`Added ${card.name} to your inventory!`)
+      setTimeout(() => setSuccessMessage(null), 3000)
+    } catch (err) {
+      // If API doesn't exist, redirect to inventory page
+      router.push('/inventory')
+    } finally {
+      setAddingToInventory(null)
+    }
+  }
+
+  const handleAddToWants = async (card: DisplayCard) => {
+    if (!user) {
+      router.push('/login')
+      return
+    }
+
+    setAddingToWants(card.id)
+    setError(null)
+    setSuccessMessage(null)
+
+    try {
+      const response = await fetch('/api/wants', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          itemId: card.id, // This will need to be the actual item ID from catalog
+          quantity: 1,
+          minCondition: 'NM',
+          languageOk: ['en'],
+          finishOk: ['normal'],
+          priority: 2,
+        }),
+      })
+
+      if (!response.ok) {
+        if (response.status === 404) {
+          // API not implemented yet - redirect to want list page
+          router.push('/wants')
+          return
+        }
+        const errorData = await response.json()
+        throw new Error(errorData.error || 'Failed to add to want list')
+      }
+
+      setSuccessMessage(`Added ${card.name} to your want list!`)
+      setTimeout(() => setSuccessMessage(null), 3000)
+    } catch (err) {
+      // If API doesn't exist, redirect to want list page
+      router.push('/wants')
+    } finally {
+      setAddingToWants(null)
+    }
+  }
+
   return (
     <div className="mx-auto w-full max-w-6xl px-4 py-8">
       <header className="mb-6">
@@ -163,6 +256,18 @@ export default function TradeSearchPage() {
           </Button>
         </div>
       </section>
+
+      {successMessage && (
+        <div className="mb-4 rounded-md bg-green-50 border border-green-200 p-4">
+          <p className="text-sm text-green-800">{successMessage}</p>
+        </div>
+      )}
+
+      {error && (
+        <div className="mb-4 rounded-md bg-red-50 border border-red-200 p-4">
+          <p className="text-sm text-red-800">{error}</p>
+        </div>
+      )}
 
       <section aria-label="Results" className="space-y-3">
         <div className="flex items-center justify-between">
@@ -210,29 +315,19 @@ export default function TradeSearchPage() {
                 <Button
                   size="sm"
                   className="w-full sm:w-auto"
-                  onClick={() => {
-                    if (!user) {
-                      router.push('/login')
-                      return
-                    }
-                    // TODO: integrate save-to-trade-list
-                  }}
+                  onClick={() => handleAddToInventory(card)}
+                  disabled={addingToInventory === card.id}
                 >
-                  Add to Trade List
+                  {addingToInventory === card.id ? 'Adding...' : 'Add to Inventory'}
                 </Button>
                 <Button
                   variant="secondary"
                   size="sm"
                   className="w-full sm:w-auto"
-                  onClick={() => {
-                    if (!user) {
-                      router.push('/login')
-                      return
-                    }
-                    // TODO: integrate add-to-wishlist
-                  }}
+                  onClick={() => handleAddToWants(card)}
+                  disabled={addingToWants === card.id}
                 >
-                  Add to Wishlist
+                  {addingToWants === card.id ? 'Adding...' : 'Add to Want List'}
                 </Button>
               </div>
             </li>
@@ -240,9 +335,6 @@ export default function TradeSearchPage() {
           </ul>
         )}
 
-        {error ? (
-          <p className="text-sm text-red-600">{error}</p>
-        ) : null}
       </section>
     </div>
   )
