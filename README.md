@@ -117,6 +117,8 @@ supabase/
 - `npm run dev` - Start the development server with Turbopack
 - `npm run build` - Build the application for production
 - `npm run start` - Start the production server
+- `npm run sync-prices` - Run daily price synchronization script
+- `npm run test:pages` - Test that all pages load correctly (requires dev server running)
 
 ## Database Schema
 

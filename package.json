@@ -6,7 +6,10 @@
     "dev": "next dev --turbopack",
     "build": "next build --turbopack",
     "start": "next start",
-    "sync-prices": "node scripts/sync-prices.mjs"
+    "sync-prices": "node scripts/sync-prices.mjs",
+    "test": "npm run test:pages",
+    "test:pages": "node scripts/test-pages.mjs",
+    "test:all": "npm run test:pages"
   },
   "dependencies": {
     "@supabase/ssr": "^0.7.0",
